@@ -1,15 +1,27 @@
 /*******************************************************************************
-* FC LED (v1.0)
-*  
-* Controlando Placa de Acrilico com fita Led RGB
-* Ao ligar a placa ela ficará piscando amarelo até se conectar ao wifi 
-* Luz vermelha pulsante pode significafr que a mesma não se contectou ao wifi
-*
-* Copyright 2019 Fcamara.
-* Escrito por Gabriel Chirico Mahtuk de Melo Sanzone
-*
-*Para este codigo funcionar corretamente, será nescessario configurar as portas do firebase
+  FC LED (v1.0)
+
+  Controlando Placa de Acrilico com fita Led RGB
+  Ao ligar a placa ela ficará piscando amarelo até se conectar ao wifi
+  Luz vermelha pulsante pode significafr que a mesma não se contectou ao wifi
+
+  Copyright 2019 Fcamara.
+  Escrito por Gabriel Chirico Mahtuk de Melo Sanzone
+
+  Para este codigo funcionar corretamente, será nescessario configurar as portas do firebase
 *********************************************************************************/
+static const uint8_t D0 = 16;
+static const uint8_t D1 = 5;
+static const uint8_t D2 = 4;
+static const uint8_t D3 = 0;
+static const uint8_t D4 = 2;
+static const uint8_t D5 = 14;
+static const uint8_t D6 = 12;
+static const uint8_t D7 = 13;
+static const uint8_t D8 = 15;
+static const uint8_t D9 = 3;
+static const uint8_t D10 = 1;
+
 
 #include <ESP8266WiFi.h>
 #include <FirebaseArduino.h>
@@ -21,27 +33,29 @@
 //Configuração de Rede Wifi
 #define WIFI_SSID "FC-CORP"
 #define WIFI_PASSWORD "fcamara@123"
-
-//Pinos da placa 
-#define VERMELHO 16  //D0
-#define VERDE  05  //D1
-#define AZUL     04  //D2
+//Pinos da placa
+#define VERMELHO D0  //D0
+#define VERDE    D1  //D1
+#define AZUL     D2  //D2
 
 int n = 0;
+int r = 0;
+int g = 0;
+int b = 0;
 //Definicao de Variavel para Animacao do LED ao carregar WIFI
 int brightness = 0;     //Inicio do LED vermelho
-int fadeAmount = 50;    // em quantos pontos aplicar o fade no LED
+int fadeAmount = 100;    // em quantos pontos aplicar o fade no LED
 
- void setup() {
+void setup() {
+  Serial.begin(115200);
+  pinMode(VERMELHO, OUTPUT);
+  pinMode(VERDE, OUTPUT);
+  pinMode(AZUL, OUTPUT);
 
-  pinMode(VERMELHO,OUTPUT);
-  pinMode(VERDE,OUTPUT);
-  pinMode(AZUL,OUTPUT);
-  
   //Conctando a rede WiFi
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD); 
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("Conectando ....");
-  while(WiFi.status() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     aguardandoWiFi();
     delay(500);
@@ -52,38 +66,19 @@ int fadeAmount = 50;    // em quantos pontos aplicar o fade no LED
 }
 
 void loop() {
-
+  Serial.println("teste");
   n = Firebase.getInt("led");
-  if(n==1){
+  if (n == 1) {
     Serial.println("Led On");
     Firebase.set("Call", "LED ON");
-    define_led(0, 255, 0);
+    r = Firebase.getInt("red");
+    g = Firebase.getInt("green");
+    b = Firebase.getInt("blue");
+    define_led(r, g, b);
 
-  } else if ( n == 0){
-     //ERRO DE COMUNICACAO
-     define_led(255, 0, 0);
-  }else {     
+  } else {
     Serial.println("Led Off");
     Firebase.set("Call", "LED OFF");
     define_led(0, 0, 0);
   }
 }
-
-
-void define_led(int R, int G, int B){
-  analogWrite(VERMELHO, R);
-  analogWrite(VERDE, G);
-  analogWrite(AZUL, B);
- }
-
-void aguardandoWiFi(){
-  define_led(brightness,brightness,brightness);
-  analogWrite(VERMELHO, brightness);    
-  // muda o brilho para o proximo loop:
-  brightness = brightness + fadeAmount;
-  // inverte a direcao do fade ao final do mesmo:
-  if (brightness == 0 || brightness == 255) {
-    fadeAmount = -fadeAmount ;
-  }    
-}
- 
