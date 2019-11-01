@@ -1,3 +1,5 @@
+//Recebe a cor via Internet
+
 void RecepcaoClienteWeb() {
   String red = servidorWeb.arg(0);
   String green = servidorWeb.arg(1);

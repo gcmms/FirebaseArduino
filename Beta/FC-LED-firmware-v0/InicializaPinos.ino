@@ -7,6 +7,6 @@ void InicializaPinos(){
   analogWrite(REDPIN, HIGH);
   analogWrite(GREENPIN, HIGH);
   analogWrite(BLUEPIN, HIGH);
-  
-  delay(1000);
+  aguardandoWiFi();
+  //delay(1000);
 }

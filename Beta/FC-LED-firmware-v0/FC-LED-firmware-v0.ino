@@ -35,12 +35,16 @@ static const uint8_t D10 = 1;
 
 #define INICAR_CORES_ALEATORIAS 15000 //Tempo ocioso antes de começar a trocar as cores automaticamente
 
+//Definicao do Firebase
+#define FIREBASE_HOST "iotteste-cd442.firebaseio.com"
+#define FIREBASE_AUTH "UOJyFDfNgasydwYOaTJXnMHFTIZjeaia2x87DZLT"
+
 unsigned long ultimoAcessoHost = 0;
 unsigned long ultimaTrocaCor = 0;
 unsigned long ultimaTrocaCorAutomatica = 0;
 
 boolean trocaAutomatica = 1; //Se voce mudar para 0 (zero), ira desligar a troca automatica de cores.
-const char* host      = "ipz-fita-led-esp8266"; //Nome que seu ESP8266 (ou NodeMCU) tera na rede
+const char* host      = "fc-led"; //Nome que seu ESP8266 (ou NodeMCU) tera na rede
 const char* ssid      = "FC-CORP"; //Nome da rede wifi da sua casa
 const char* password  = "fcamara@123"; //Senha da rede wifi da sua casa
 
@@ -50,13 +54,19 @@ int tempoTrocaCor = 50; //Velicidade que as cores trocam automaticamente
 ESP8266HTTPUpdateServer atualizadorOTA; //Este e o objeto que permite atualizacao do programa via wifi (OTA)
 ESP8266WebServer servidorWeb(90); //Servidor Web na porta 80
 
-//Esta e a pagina enviada para o navegador de internet
-String paginaWeb = "";
+//Definicao de Variavel para Animacao do LED ao carregar WIFI
+int brightness = 0;     //Inicio do LED vermelho
+int fadeAmount = 100;    // em quantos pontos aplicar o fade no LED
+int n = 0;
+int r = 0;
+int g = 0;
+int b = 0;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
 void setup() {
   //Se vc ativou o debugging, devera descomentar esta linha abaixo tambem.
   //Serial.begin(115200);
+  aguardandoWiFi();
   InicializaPinos();
   InicializaWifi();
   InicializaMDNS();
@@ -67,18 +77,32 @@ void setup() {
 
 void loop() {
   if (WiFi.status() != WL_CONNECTED) {
+    aguardandoWiFi();
     InicializaWifi();
     InicializaMDNS();
-  }
-  else {
-    if (millis() - ultimoAcessoHost > 10) {
+  } else {
+    n = Firebase.getInt("led");
+    if (n == 1) {
+      Serial.println("Led On");
+      Firebase.set("Call", "LED ON");
+      r = Firebase.getInt("red");
+      g = Firebase.getInt("green");
+      b = Firebase.getInt("blue");
+      define_led(r, g, b);
+  
+    } else {
+      Serial.println("Led Off");
+      Firebase.set("Call", "LED OFF");
+      define_led(0, 0, 0);
+    }
+    /*if (millis() - ultimoAcessoHost > 10) {
       servidorWeb.handleClient();
       ultimoAcessoHost = millis();
     }
     if (trocaAutomatica && (millis() - ultimaTrocaCor > INICAR_CORES_ALEATORIAS) && (millis() - ultimaTrocaCorAutomatica > tempoTrocaCor)) {
       ultimaTrocaCorAutomatica = millis();
       CoresAleatorias(cnt++, RGB);
-    }
+    }*/
   }
 }
 
